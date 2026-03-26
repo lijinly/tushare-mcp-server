@@ -305,6 +305,59 @@ MONEYFLOW_HSGT_TOOL = Tool(
     }
 )
 
+MARGIN_TOOL = Tool(
+    name="margin",
+    description="获取融资融券交易汇总数据（按交易所），包括融资余额、融资买入额、融资偿还额、融券余额等",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "trade_date": {
+                "type": "string",
+                "description": "交易日期，格式YYYYMMDD"
+            },
+            "start_date": {
+                "type": "string",
+                "description": "开始日期，格式YYYYMMDD"
+            },
+            "end_date": {
+                "type": "string",
+                "description": "结束日期，格式YYYYMMDD"
+            },
+            "exchange_id": {
+                "type": "string",
+                "description": "交易所代码，SSE为上交所，SZSE为深交所，BSE为北交所",
+                "enum": ["SSE", "SZSE", "BSE"]
+            }
+        }
+    }
+)
+
+MARGIN_DETAIL_TOOL = Tool(
+    name="margin_detail",
+    description="获取融资融券交易明细数据（按股票代码），包括个股融资余额、融资买入额、融券余量等",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "ts_code": {
+                "type": "string",
+                "description": "股票代码，支持多个，逗号分隔"
+            },
+            "trade_date": {
+                "type": "string",
+                "description": "交易日期，格式YYYYMMDD"
+            },
+            "start_date": {
+                "type": "string",
+                "description": "开始日期，格式YYYYMMDD"
+            },
+            "end_date": {
+                "type": "string",
+                "description": "结束日期，格式YYYYMMDD"
+            }
+        }
+    }
+)
+
 HOLDERS_TOOL = Tool(
     name="top10_holders",
     description="获取上市公司前十大股东数据",
@@ -514,6 +567,8 @@ TOOLS = [
     CASHFLOW_TOOL,
     DAILY_LIMIT_TOOL,
     MONEYFLOW_HSGT_TOOL,
+    MARGIN_TOOL,
+    MARGIN_DETAIL_TOOL,
     HOLDERS_TOOL,
     CONCEPT_TOOL,
     CONCEPT_DETAIL_TOOL,
@@ -700,7 +755,7 @@ async def handle_daily_limit(args: dict) -> list:
 async def handle_moneyflow_hsgt(args: dict) -> list:
     """处理沪深港通资金流向查询"""
     pro = get_ts_pro()
-    
+
     params = {}
     if 'trade_date' in args and args['trade_date']:
         params['trade_date'] = args['trade_date']
@@ -708,8 +763,44 @@ async def handle_moneyflow_hsgt(args: dict) -> list:
         params['start_date'] = args['start_date']
     if 'end_date' in args and args['end_date']:
         params['end_date'] = args['end_date']
-    
+
     df = pro.moneyflow_hsgt(**params)
+    return [TextContent(type="text", text=df_to_json(df))]
+
+
+async def handle_margin(args: dict) -> list:
+    """处理融资融券交易汇总查询"""
+    pro = get_ts_pro()
+
+    params = {}
+    if 'trade_date' in args and args['trade_date']:
+        params['trade_date'] = args['trade_date']
+    if 'start_date' in args and args['start_date']:
+        params['start_date'] = args['start_date']
+    if 'end_date' in args and args['end_date']:
+        params['end_date'] = args['end_date']
+    if 'exchange_id' in args and args['exchange_id']:
+        params['exchange_id'] = args['exchange_id']
+
+    df = pro.margin(**params)
+    return [TextContent(type="text", text=df_to_json(df))]
+
+
+async def handle_margin_detail(args: dict) -> list:
+    """处理融资融券交易明细查询"""
+    pro = get_ts_pro()
+
+    params = {}
+    if 'ts_code' in args and args['ts_code']:
+        params['ts_code'] = args['ts_code']
+    if 'trade_date' in args and args['trade_date']:
+        params['trade_date'] = args['trade_date']
+    if 'start_date' in args and args['start_date']:
+        params['start_date'] = args['start_date']
+    if 'end_date' in args and args['end_date']:
+        params['end_date'] = args['end_date']
+
+    df = pro.margin_detail(**params)
     return [TextContent(type="text", text=df_to_json(df))]
 
 
@@ -855,6 +946,8 @@ TOOL_HANDLERS = {
     "cashflow": handle_cashflow,
     "daily_limit": handle_daily_limit,
     "moneyflow_hsgt": handle_moneyflow_hsgt,
+    "margin": handle_margin,
+    "margin_detail": handle_margin_detail,
     "top10_holders": handle_holders,
     "concept": handle_concept,
     "concept_detail": handle_concept_detail,
