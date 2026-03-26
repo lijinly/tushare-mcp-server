@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "tushare": {
+      "command": "C:\\Users\\lijin\\.workbuddy\\binaries\\python\\envs\\tushare-mcp\\Scripts\\python.exe",
+      "args": ["-m", "tushare_mcp_server"],
+      "env": {
+        "TUSHARE_TOKEN": "d315a9876522cb20823b44e3c61ca73dfdb3447e7bc5e0db8008c7f5"
+      }
+    }
+  }
+}
